@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+	<meta charset="utf-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+	<title>bar</title>
+	<script src="p5.js"></script>
+	<!-- <script src="../libraries/p5.sound.js"></script> -->
+	<script src="sketch.js"></script>
+	<style>
+		body {
+			margin: 0;
+			padding: 0;
+			background: lightblue;
+			margin-left: auto;
+			margin-right: auto;
+			margin-top: 50px;
+			text-align: center;
+			font-size: 20px;
+		}
+
+		#slide-container {
+			margin-left: auto;
+			margin-right: auto;
+			width: 600px;
+			height: 400px;
+			background: white;
+			padding: 20px;
+		}
+
+		#buttons {
+			margin-left: auto;
+			margin-right: auto;
+			width: 200px;
+			display: flex;
+			justify-content: space-between;
+		}
+
+		#buttons>button {
+			width: 50px;
+			height: 50px;
+			border-radius: 50%;
+			background: black;
+			color: white;
+			font-size: 30px;
+		}
+		#converter{
+			display:none
+		}
+	</style>
+</head>
+
+<body>
+	<h1 id="subject"></h1>
+	<h2 id="slide-count"></h2>
+	<div id="slide-container">
+		</p>
+	</div>
+	<div id="buttons">
+		<button onclick="add(-1)"><</button>
+		<button onclick="add(1)">></button>
+	</div>
+	<div id="converter">
+		<textarea name="box" id="convert-box" cols="30" rows="10"></textarea>
+		<button onclick="convertToJson()">convert</button>
+	</div>
+
+
+	<script>
+		document.addEventListener('keypress', (event) => {
+			if(event.key == '~'){
+				if(document.getElementById('converter').style.display == 'none'){
+					document.getElementById('converter').style.display = 'block'
+				} else {
+					document.getElementById('converter').style.display = 'none';
+				}
+			}
+		})
+		const d = {
+			table:
+				[
+					{
+						name: 'histology methods, cytology (2)',
+						questions:
+							[{"q":"What is another word for Histology","a":"MicroAnatomy / Microscopic Anatomy","questioning":true},{"q":"What is Histology","a":"The study of the cells and tissues of the body and how these integrate to form organs","questioning":true},{"q":"What is Embryology","a":"The study of the development of a new individual (development of embryo and fetus)","questioning":true},{"q":"What is Cytology","a":"study of the structure and function of cells","questioning":true},{"q":"What is Cytopathology","a":"study of diseased cells from fluids or tissues","questioning":true},{"q":"What is Histopathology","a":"study of diseased tissues","questioning":true},{"q":"Tissues are made of two interacting components ___ and ___","a":"cells, extracellular matrix(ECM)","questioning":true},{"q":"Histology requires a basic understanding of the advantages and disadvantages of different types of ___ and how ___ are prepared for microscopic study","a":"microscopes, tissues","questioning":true},{"q":"Examples of Light microscopy","a":"bright field microscopy, fluorescence, phase-contrast, polarizing, dissecting stereomicroscope","questioning":true},{"q":"Bright field microscopy requires staining to provide contrast","a":"true","questioning":true},{"q":"How does fluorescence microscopy work?","a":"Fluorescent dyes stain specific cell components visualized when viewed under ultraviolet light","questioning":true},{"q":"Adding a polarizing filter to a bright field microscope highlights ____","a":"birefringent materials","questioning":true},{"q":"Advantages of light microscopy","a":"[Relatively inexpensive, Provides rapid diagnosis, Allows ovservation of living specimens, Resolving power of LM is 0.2μm]","questioning":true},{"q":"Disadvantages of light microscopy","a":"[Image is 2-dimensional, Resolving power is limited by the wavelength of light, Requires maintenance, Requires expertise for proper diagnosis (quality analysis and quality control)]","questioning":true},{"q":"Advantages of Stereomicroscopes","a":"Relatively inexpensive, Practical/versatile, Can provide a 3-dimensional image, Can be used in microsurgery and with other types of specimens","questioning":true},{"q":"Stereomicroscopes disadvantages","a":"Low resolving power, Needs to be maintained","questioning":true},{"q":"Transmission electron microscopy(TEM) The wavelength in the electron beam is ___ then the light beam resulting in 1,000-fold increase in resolution","a":"shorter","questioning":true},{"q":"Advantages of TEM","a":"[Great resolving power 0.16 – 0.18nm, Very useful for rapid diagnosis of viruses and other microscopic organisms & storage diseases]","questioning":true},{"q":"Disadvantages of TEM","a":"Image is 2-dimensional, Image is black & white, cannot be used in living object, Very expensive","questioning":true},{"q":"Scan Electron Microscopy(sem) Electron beam scans surface (3D effect). Only ___ structures. Lower resolution than TEM","a":"external","questioning":true},{"q":"For light microscopy and electron microscopy the specimen must be…","a":"well preserved: retain structure and molecular composition, be sufficiently thin to allow light or electron transmission, have enough contrast to observe details]","questioning":true},{"q":"How would you retrieve Tissue for observation in a microscope (give an example)","a":"1.) Biopsy: sample of tissue from a living animal. Tissue sample/biospecimen: sample of tissue or whole organ from dead animal. 2.) Trim 1cm^3 3.) Place in 10 times volume of 10% formalin fixative","questioning":true},{"q":"pic","a":"Green: Drive wheel, Red: Block holder, Blue: Paraffin block, Yellow: Tissue, Pink: Steel Knife","questioning":true,"img":"img1.png"},{"q":"____ are used most common stains used for routine evaluation","a":"Hematoxylin – Eosin (H & E)","questioning":true},{"q":"What is HAEMATOXYLIN","a":"Basic stain, DNA and RNA blue, ‘basophilic’","questioning":true},{"q":"What is Eosin","a":"Acidic Stain, Proteins Pink, ‘Eosinophilic’","questioning":true},{"q":"Masson’s trichrome stains collagen ___ and smooth muscle grey","a":"green","questioning":true},{"q":"Mallory’s trichrome stains collagen ___ and nuclei ___","a":"blue, red  ","questioning":true},{"q":"pic","a":"Yellow:  Enzymes, Pink: Immunohistochemistry","questioning":true,"img":"img2.png"},{"q":"pic","a":"Orange: Hematoxylin-eosin, Blue: A cells – Glucagon, Green: B cells - Insulin","questioning":true,"img":"img3.png"}]
+					}
+				]
+		}
+
+		let countStart = 1
+		const convertToJson = () => {
+			let output = []
+			let str = document.getElementById('convert-box').value
+			let strArr = str.trim().split('\n')
+			strArr.forEach(question => {
+				let q = question.split(' = ')[0];
+				let a = question.split(' = ')[1];
+				let out;
+				if(q == "pic"){
+					 out = {
+						q: q,
+						a: a,
+						questioning: true,
+						img: `img${countStart}.png`
+					}
+					output.push(out);
+					countStart++
+				} else if (question != " "){
+					out = {
+					q: q,
+					a: a,
+					questioning: true
+				} 
+				output.push(out);
+
+				}
+			})
+			let out = JSON.stringify(output)
+			document.getElementById('convert-box').value = out
+		}
+
+
+
+		let subjectIndex = 0;
+		let i = 0;
+		let subject = d.table[0];
+		let sc = document.getElementById("slide-container")
+		let current = subject.questions[i]
+
+
+
+		document.getElementById('subject').innerHTML = subject.name
+		document.getElementById('slide-count').innerHTML = `Slide: ${i + 1}/${subject.questions.length}`
+
+
+
+		const add = amount => {
+			if (i >= subject.questions.length - 1 && amount == 1) {
+				alert('End of slide deck')
+			} else if (i <= 0 && amount == -1) {
+				alert('cannot go back')
+			} else {
+				i += amount
+				update()
+			}
+		}
+
+
+
+
+
+
+		const loadImg = () => {
+			sc.innerHTML = ""
+						const img = document.createElement("img");
+						img.src = "images/" + current.img;
+						img.style.width = '400px'
+						img.style.height = '400px'
+						img.id = 'question-pic'
+						document.getElementById('slide-container').appendChild(img);
+		}
+		const update = () => {
+			current = subject.questions[i]
+			document.getElementById('slide-count').innerHTML = `Slide: ${i + 1}/${subject.questions.length}`
+
+
+			if(current['img'] !== undefined && current.questioning){
+				loadImg();
+			} else {
+				sc.innerHTML = current.q
+			}
+		}
+		update()
+					
+		sc.onmousedown = () => {
+				if(current['img'] !== undefined){
+				current.questioning = !current.questioning
+					if(current.questioning){
+						loadImg()
+					} else {
+						let pic = document.getElementById('question-pic');
+						pic.parentNode.removeChild(pic)
+						sc.innerHTML = current.a
+					}
+				} else {
+					sc.innerHTML = current.questioning ? current.a : current.q;
+					current.questioning = !current.questioning
+				}
+				
+			}
+
+	</script>
+</body>
+
+</html>
